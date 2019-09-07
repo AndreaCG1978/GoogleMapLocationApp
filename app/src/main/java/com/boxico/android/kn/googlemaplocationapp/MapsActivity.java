@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
@@ -27,6 +28,7 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.maps.android.PolyUtil;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -49,11 +51,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         AppCompatButton button = this.findViewById(R.id.alerta);
+        final TextView t = this.findViewById(R.id.coordenadas);
+        final MapsActivity me = this;
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                getOnlyDeviceLocation();
+                boolean respuesta = PolyUtil.containsLocation(mLastKnownLocation.getLatitude(),mLastKnownLocation.getLongitude(),polygon.getPoints(),false);
+                if(respuesta){
+                   t.setText(t.getText() + "- ESTA ADENTRO");
 
-
+                }else{
+                    t.setText(t.getText() + "- ESTA AFUERA");
+                }
             }
         });
 
@@ -100,6 +110,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 */
 
+    private void getOnlyDeviceLocation() {
+
+        try {
+            if (mLocationPermissionGranted) {
+                Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful()) {
+                            // Set the map's camera position to the current location of the device.
+                            mLastKnownLocation = task.getResult();
+
+                        } else {
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    }
+                });
+            }
+        } catch (SecurityException e) {
+            Log.e("Exception: %s", e.getMessage());
+        }
+
+    }
+
     private void getDeviceLocation() {
 
         try {
@@ -124,31 +158,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-       /* try {
-            if (mLocationPermissionGranted) {
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
-                            mLastKnownLocation = (Location) task.getResult();
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                        } else {
 
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                        }
-                    }
-                });
-            }
-        } catch(SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
-        }
-    }
-*/
+
 
     @Override
     public void onMapReady(GoogleMap map) {
@@ -162,6 +173,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
+
     }
 
     private void getLocationPermission() {
@@ -208,10 +220,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .position(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() - 0.001))
                 .title("Punto Cerca 3"));
         polygon = mMap.addPolygon(new PolygonOptions()
-                .add(new LatLng(mLastKnownLocation.getLatitude() +0.001,  mLastKnownLocation.getLongitude() + 0.001))
-                .add(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() - 0.001))
-                .add(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() - 0.001))
-                .add(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() +0.0001,  mLastKnownLocation.getLongitude() + 0.0001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() +0.0001 , mLastKnownLocation.getLongitude() - 0.0001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() -0.0001 , mLastKnownLocation.getLongitude() - 0.0001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() -0.0001 , mLastKnownLocation.getLongitude() + 0.0001))
                 .strokeColor(Color.RED)
                 .fillColor(0x5500ff00));
 

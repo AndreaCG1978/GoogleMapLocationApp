@@ -104,6 +104,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             mMap.addMarker(new MarkerOptions()
                                     .position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
                                     .title("Current Location"));
+                            mostrarCoordenadas();
 
 
                         } else {
@@ -172,7 +173,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mLocationPermissionGranted = true;
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
-            this.mostrarCoordenadas();
+           // this.mostrarCoordenadas();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
@@ -183,7 +184,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void mostrarCoordenadas() {
 
         TextView t = this.findViewById(R.id.coordenadas);
-      //  t.setText(mMap.);
+        t.setText("Latitud:" + String.valueOf(mLastKnownLocation.getLatitude()) + "Longitud:" + String.valueOf(mLastKnownLocation.getLongitude()));
     }
 
 

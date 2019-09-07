@@ -1,12 +1,15 @@
 package com.boxico.android.kn.googlemaplocationapp;
 
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -18,7 +21,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -31,7 +37,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean mLocationPermissionGranted = false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
-
+    private Polygon polygon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +48,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        AppCompatButton button = this.findViewById(R.id.alerta);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+            }
+        });
 
 
     }
@@ -97,19 +111,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = task.getResult();
-
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                    new LatLng(mLastKnownLocation.getLatitude(),
-                                            mLastKnownLocation.getLongitude()), 20));
-                            mMap.addMarker(new MarkerOptions()
-                                    .position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
-                                    .title("Current Location"));
                             mostrarCoordenadas();
-
-
                         } else {
-
-
                             mMap.getUiSettings().setMyLocationButtonEnabled(false);
                         }
                     }
@@ -183,8 +186,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void mostrarCoordenadas() {
 
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(mLastKnownLocation.getLatitude(),
+                        mLastKnownLocation.getLongitude()), 20));
+
+        Marker mPosition = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
+                .title("Current Location"));
+
+
+        Marker mPosition1 = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .title("Punto Cerca 1"));
+        Marker mPosition2 = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .title("Punto Cerca 2"));
+        Marker mPosition3 = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .title("Punto Cerca 3"));
+        Marker mPosition4 = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .title("Punto Cerca 3"));
+        polygon = mMap.addPolygon(new PolygonOptions()
+                .add(new LatLng(mLastKnownLocation.getLatitude() +0.001,  mLastKnownLocation.getLongitude() + 0.001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .add(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .strokeColor(Color.RED)
+                .fillColor(0x5500ff00));
+
+
         TextView t = this.findViewById(R.id.coordenadas);
         t.setText("Latitud:" + String.valueOf(mLastKnownLocation.getLatitude()) + "Longitud:" + String.valueOf(mLastKnownLocation.getLongitude()));
+
     }
 
 

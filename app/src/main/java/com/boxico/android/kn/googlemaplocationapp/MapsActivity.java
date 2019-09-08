@@ -21,6 +21,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -29,17 +31,17 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.maps.android.PolyUtil;
+import com.google.maps.android.SphericalUtil;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private Location mLastKnownLocation = null;
-
-    private final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 101;
-
     private boolean mLocationPermissionGranted = false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private Polygon polygon;
+    private Circle radio;
+    private final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,24 +52,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        this.configurarWidgets();
+
+
+    }
+
+
+    private void configurarWidgets(){
         AppCompatButton button = this.findViewById(R.id.alerta);
         final TextView t = this.findViewById(R.id.coordenadas);
-        final MapsActivity me = this;
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getOnlyDeviceLocation();
                 boolean respuesta = PolyUtil.containsLocation(mLastKnownLocation.getLatitude(),mLastKnownLocation.getLongitude(),polygon.getPoints(),false);
                 if(respuesta){
-                   t.setText(t.getText() + "- ESTA ADENTRO");
+                    t.setText(t.getText() + "- ESTA ADENTRO DEL POLIGONO");
 
                 }else{
-                    t.setText(t.getText() + "- ESTA AFUERA");
+                    t.setText(t.getText() + "- ESTA AFUERA DEL POLIGONO");
                 }
+                boolean respuesta1 = false;
+
+                float[] disResultado = new float[2];
+
+                Location.distanceBetween( mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude(),
+                        radio.getCenter().latitude,
+                        radio.getCenter().longitude,
+                        disResultado);
+
+                if(disResultado[0] > radio.getRadius()){
+                    t.setText(t.getText() + "- ESTA AFUERA DEL RADIO");
+                } else {
+                    t.setText(t.getText() + "- ESTA ADENTRO DEL RADIO");
+                }
+
             }
         });
-
-
     }
 
 
@@ -90,25 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    /*
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(0, 0);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("No se donde estoy"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-    }
-*/
 
     private void getOnlyDeviceLocation() {
 
@@ -164,11 +167,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
-        // Do other setup activities here too, as described elsewhere in this tutorial.
-    /*    LatLng sydney = new LatLng(0, 0);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("No se donde estoy"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
-        // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
 
         // Get the current location of the device and set the position of the map.
@@ -188,7 +186,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mLocationPermissionGranted = true;
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
-           // this.mostrarCoordenadas();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
@@ -208,16 +205,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         Marker mPosition1 = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .position(new LatLng(mLastKnownLocation.getLatitude() +0.0001 , mLastKnownLocation.getLongitude() + 0.0001))
                 .title("Punto Cerca 1"));
         Marker mPosition2 = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() + 0.001))
+                .position(new LatLng(mLastKnownLocation.getLatitude() -0.0001 , mLastKnownLocation.getLongitude() + 0.0001))
                 .title("Punto Cerca 2"));
         Marker mPosition3 = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLastKnownLocation.getLatitude() +0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .position(new LatLng(mLastKnownLocation.getLatitude() +0.0001 , mLastKnownLocation.getLongitude() - 0.0001))
                 .title("Punto Cerca 3"));
         Marker mPosition4 = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLastKnownLocation.getLatitude() -0.001 , mLastKnownLocation.getLongitude() - 0.001))
+                .position(new LatLng(mLastKnownLocation.getLatitude() -0.0001 , mLastKnownLocation.getLongitude() - 0.0001))
                 .title("Punto Cerca 3"));
         polygon = mMap.addPolygon(new PolygonOptions()
                 .add(new LatLng(mLastKnownLocation.getLatitude() +0.0001,  mLastKnownLocation.getLongitude() + 0.0001))
@@ -226,6 +223,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .add(new LatLng(mLastKnownLocation.getLatitude() -0.0001 , mLastKnownLocation.getLongitude() + 0.0001))
                 .strokeColor(Color.RED)
                 .fillColor(0x5500ff00));
+        radio = mMap.addCircle(new CircleOptions().radius(30)
+                .center(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()))
+                .strokeColor(Color.RED)
+                .fillColor(Color.CYAN));
 
 
         TextView t = this.findViewById(R.id.coordenadas);
